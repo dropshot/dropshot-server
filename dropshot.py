@@ -19,7 +19,7 @@ def get_players():
     input_offset = int(request.query.get('offset') or 0)
     
     playersQuery = models.session.query(models.Player).slice(input_offset, input_offset + input_count)
-    playersAsJson = map(lambda player: player.to_json(), playersQuery)
+    playersAsJson = map(lambda player: player.to_dictionary(), playersQuery)
 
     return { 'count' : len(playersAsJson), 'offset' : input_offset, 'players' : playersAsJson }
 
@@ -29,7 +29,7 @@ def get_player_by_username(username):
     if (playerQuery.count() == 0):
         return { 'error' : 'no player found' }
     player = playerQuery.first()
-    return player.to_json()
+    return player.to_dictionary()
 
 @get('/players/<username>/games')
 def get_games_by_username(username):
@@ -41,7 +41,7 @@ def get_game_by_id(game_id):
     if(gameQuery.count() == 0):
         return { 'error' : 'CANTFINDGAME' }
     game = gameQuery.first()
-    return game.to_json()
+    return game.to_dictionary()
 
 @get('/games')
 def get_games():

@@ -1,7 +1,6 @@
 from sqlalchemy import *
 from sqlalchemy.orm import *
 from sqlalchemy.ext.declarative import declarative_base
-import json
 
 engine = create_engine('sqlite:///db.sqlite', echo=True)
 Base = declarative_base()
@@ -15,7 +14,7 @@ class Player(Base):
     authToken = Column(String, unique=True)
     games = relationship("Game", primaryjoin = "or_(Player.id==Game.loser_id, Player.id==Game.winner_id)")
     
-    def to_json (self):
+    def to_dictionary (self):
         return { 'username' : self.username, 'gamesPlayed' : len(self.games)}
 
 class Game(Base):
@@ -26,7 +25,7 @@ class Game(Base):
     loser_id = Column(Integer, ForeignKey('players.id'))
     loser = relationship("Player", foreign_keys=[loser_id])
     
-    def to_json(self):
+    def to_dictionary(self):
         return { 'id' : self.id , 'winner' : self.winner.username, 'loser' : self.loser.username }
 
 Base.metadata.create_all(bind=engine)
