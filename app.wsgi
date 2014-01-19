@@ -1,6 +1,6 @@
 import sys, os, bottle
 
-sys.path = ['/home/dev/python/bottle/dropshot-server/'] + sys.path
+sys.path = ['/var/code/dropshot-server/', '/home/dev/python/bottle/dropshot-server/'] + sys.path
 
 os.chdir(os.path.dirname(__file__))
 
