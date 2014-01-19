@@ -17,16 +17,24 @@ def get_players():
     return "No players."
 
 @get('/players/<username>')
-def get_players_by_username(username):
-    return template('No player <b>{{username}}</b>.', username=username)
+def get_player_by_username(username):
+    playerQuery = models.session.query(models.Player).filter(models.Player.username == username)
+    if (playerQuery.count() == 0):
+        return { 'error' : 'no player found' }
+    player = playerQuery.first()
+    return player.to_json()
 
 @get('/players/<username>/games')
 def get_games_by_username(username):
     return template('No games associated with player <b>{{username}}</b>.', username=username)
 
 @get('/games/<game_id>')
-def get_games_by_id(game_id):
-    return template('No game with ID=<b>{{game_id}}</b>.', game_id=game_id)
+def get_game_by_id(game_id):
+    gameQuery = models.session.query(models.Game).filter(models.Game.id == gameId)
+    if(gameQuery.count() == 0)
+        return { 'error' : 'CANTFINDGAME' }
+    game = gameQuery.first()
+    return game.to_json()
 
 @get('/games')
 def get_games():
