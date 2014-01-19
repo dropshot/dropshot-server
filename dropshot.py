@@ -45,7 +45,13 @@ def get_game_by_id(game_id):
 
 @get('/games')
 def get_games():
-    return "No games."
+    input_count = int(request.query.get('count') or 100)
+    input_offset = int(request.query.get('offset') or 0)
+    
+    gamesQuery = models.session.query(models.Game).slice(input_offset, input_offset + input_count)
+    gamesAsJson = map(lambda game: game.to_dictionary(), gamesQuery)
+
+    return { 'count' : len(gamesAsJson), 'offset' : input_offset, 'players' : gamesAsJson }
 
 @get('/logout')
 def logout():
