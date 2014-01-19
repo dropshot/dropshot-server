@@ -1,6 +1,7 @@
 #!/usr/bin/env python
-from bottle import route, get, post, run, template
-#import models
+from bottle import request, route, get, post, run, template
+from sqlalchemy import or_
+import models
 
 # ---- GET REQUESTS -----------------------------------------------------------
 
@@ -31,7 +32,7 @@ def get_games_by_username(username):
 @get('/games/<game_id>')
 def get_game_by_id(game_id):
     gameQuery = models.session.query(models.Game).filter(models.Game.id == gameId)
-    if(gameQuery.count() == 0)
+    if(gameQuery.count() == 0):
         return { 'error' : 'CANTFINDGAME' }
     game = gameQuery.first()
     return game.to_json()
@@ -52,7 +53,17 @@ def post_games():
 
 @post('/players')
 def post_players():
-    return "Cannot create player."
+    input_username = request.forms.get('username')
+    input_password = request.forms.get('password')
+    input_email = request.forms.get('email')
+
+    playerQuery = models.session.query(models.Player).filter(or_(models.Player.username == input_username, models.Player.email == input_email))
+    if (playerQuery.count() > 0):
+        return { 'error' : 'USEREXISTS' }
+
+    player = models.Player(username = input_username, password = input_password, email = input_email)
+    models.session.add(player)
+    models.session.commit()
 
 @post('/login')
 def login():
