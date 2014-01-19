@@ -55,7 +55,28 @@ def logout():
 
 @post('/games')
 def post_games():
-    return "Cannot create game."
+    input_winner = request.forms.get('winner')
+    input_loser = request.forms.get('loser')
+    input_winner_score = request.forms.get('winnerScore')
+    input_loser_score = request.forms.get('loserScore')
+    
+    if( not (input_winner_score.isdigit() and input_loser_score.isdigit())):
+        return "Cannot create game. Invalid scores"
+
+    winnerQuery = models.session.query(models.Player).filter(models.Player.username == input_winner)
+    loserQuery = models.session.query(models.Player).filter(models.Player.username == input_loser)
+
+    if( not (winnerQuery.count() == 1 and loserQuery.count() == 1)):
+        return "Cannot create game. Invalid players"
+
+    winner = winnerQuery.one()
+    loser = loserQuery.one()
+
+    game = models.Game(winner=winner, loser=loser)
+    models.session.add(game)
+    models.session.commit()
+    
+    return game.to_dictionary()
 
 @post('/players')
 def post_players():
