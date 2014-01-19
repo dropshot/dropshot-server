@@ -16,7 +16,7 @@ class Player(Base):
     games = relationship("Game", primaryjoin = "or_(Player.id==Game.loser_id, Player.id==Game.winner_id)")
     
     def to_json (self):
-        return json.dumps({ 'username' : self.username, 'gamesPlayed' : len(self.games)})    
+        return { 'username' : self.username, 'gamesPlayed' : len(self.games)}
 
 class Game(Base):
     __tablename__ = 'games'
@@ -27,7 +27,7 @@ class Game(Base):
     loser = relationship("Player", foreign_keys=[loser_id])
     
     def to_json(self):
-        return json.dumps({ 'id' : self.id , 'winner' : self.winner.username, 'loser' : self.loser.username })
+        return { 'id' : self.id , 'winner' : self.winner.username, 'loser' : self.loser.username }
 
 Base.metadata.create_all(bind=engine)
 Session = sessionmaker(bind=engine)

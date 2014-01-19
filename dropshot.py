@@ -15,7 +15,13 @@ def pong():
 
 @get('/players')
 def get_players():
-    return "No players."
+    input_count = int(request.query.get('count') or 100)
+    input_offset = int(request.query.get('offset') or 0)
+    
+    playersQuery = models.session.query(models.Player).slice(input_offset, input_offset + input_count)
+    playersAsJson = map(lambda player: player.to_json(), playersQuery)
+
+    return { 'count' : len(playersAsJson), 'offset' : input_offset, 'players' : playersAsJson }
 
 @get('/players/<username>')
 def get_player_by_username(username):
