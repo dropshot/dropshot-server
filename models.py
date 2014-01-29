@@ -29,9 +29,12 @@ class Game(Base):
     winner = relationship("Player", foreign_keys=[winner_id])
     loser_id = Column(Integer, ForeignKey('players.id'))
     loser = relationship("Player", foreign_keys=[loser_id])
+    winner_score = Column(Integer)
+    loser_score = Column(Integer)
+    timestamp = Column(Integer)
     
     def to_dictionary(self):
-        return { 'id' : self.id , 'winner' : self.winner.username, 'loser' : self.loser.username }
+        return { 'id' : self.id , 'winner' : self.winner.username, 'loser' : self.loser.username, 'loserScore' : self.loser_score, 'winnerScore' : self.winner_score, 'timestamp' : self.timestamp}
 
 Base.metadata.create_all(bind=engine)
 Session = sessionmaker(bind=engine)
