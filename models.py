@@ -1,6 +1,7 @@
 from sqlalchemy import *
 from sqlalchemy.orm import *
 from sqlalchemy.ext.declarative import declarative_base
+import os, binascii
 
 engine = create_engine('sqlite:///db.sqlite', echo=True)
 Base = declarative_base()
@@ -16,6 +17,10 @@ class Player(Base):
     
     def to_dictionary (self):
         return { 'username' : self.username, 'gamesPlayed' : len(self.games)}
+    
+    def generate_auth_token (self):
+        self.authToken = str(binascii.b2a_hex(os.urandom(15)))
+        return True
 
 class Game(Base):
     __tablename__ = 'games'
