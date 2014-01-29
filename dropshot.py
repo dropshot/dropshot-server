@@ -2,6 +2,7 @@
 from bottle import request, route, get, post, run, template
 from sqlalchemy import or_
 import models
+import time
 
 # ---- GET REQUESTS -----------------------------------------------------------
 
@@ -51,7 +52,7 @@ def get_games():
     gamesQuery = models.session.query(models.Game).slice(input_offset, input_offset + input_count)
     gamesAsJson = map(lambda game: game.to_dictionary(), gamesQuery)
 
-    return { 'count' : len(gamesAsJson), 'offset' : input_offset, 'players' : gamesAsJson }
+    return { 'count' : len(gamesAsJson), 'offset' : input_offset, 'games' : gamesAsJson }
 
 @get('/logout')
 def logout():
@@ -78,7 +79,7 @@ def post_games():
     winner = winnerQuery.one()
     loser = loserQuery.one()
 
-    game = models.Game(winner=winner, loser=loser)
+    game = models.Game(winner=winner, loser=loser, winner_score=input_winner_score, loser_score=input_loser_score, timestamp=int(time.time()))
     models.session.add(game)
     models.session.commit()
     
