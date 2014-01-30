@@ -11,7 +11,7 @@ current_player = None
 @app.hook('before_request')
 def set_logged_in_player():
     global current_player
-    authToken = request.get_cookie('authtoken')
+    authToken = request.get_cookie('authtoken', default="!")
 
     playerQuery = models.session.query(models.Player).\
                   filter(models.Player.authToken == authToken)
