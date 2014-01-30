@@ -173,9 +173,5 @@ def login():
     response.set_cookie('authtoken', player.authToken)
     return { 'authToken' : player.authToken }
 
-#@route('/db')
-#def create_db():
-#    return models.session.query(models.Player).all()[0].to_json()
-
 if __name__ == '__main__':
     app.run(host='localhost', port='3000')
