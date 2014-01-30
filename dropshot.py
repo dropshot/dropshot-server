@@ -33,7 +33,7 @@ def get_players():
     input_offset = int(request.query.get('offset') or 0)
     
     playersQuery = models.session.query(models.Player).slice(input_offset, input_offset + input_count)
-    playersAsJson = map(lambda player: player.to_dictionary(), playersQuery)
+    playersAsJson = list(map(lambda player: player.to_dictionary(), playersQuery))
 
     return { 'count' : len(playersAsJson), 'offset' : input_offset, 'players' : playersAsJson }
 
@@ -63,7 +63,7 @@ def get_games():
     input_offset = int(request.query.get('offset') or 0)
     
     gamesQuery = models.session.query(models.Game).slice(input_offset, input_offset + input_count)
-    gamesAsJson = map(lambda game: game.to_dictionary(), gamesQuery)
+    gamesAsJson = list(map(lambda game: game.to_dictionary(), gamesQuery))
 
     return { 'count' : len(gamesAsJson), 'offset' : input_offset, 'games' : gamesAsJson }
 
