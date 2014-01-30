@@ -83,16 +83,16 @@ def get_pending_games():
     if(current_player == None):
         response.status = 401
         return { 'error' : 'NOTLOGGEDIN'}
-    
+
     input_count = int(request.query.get('count') or 100)
     input_offset = int(request.query.get('offset') or 0)
-    
+
     gamesQuery = models.session.query(models.Game).\
                  filter(models.Game.state == 'pending').\
                  filter(models.Game.submitted_by != current_player).\
                  filter(or_(models.Game.loser == current_player,
                             models.Game.winner == current_player))
-    
+
     gamesAsJson = list(map(lambda game: game.to_dictionary(), gamesQuery))
     return { 'count' : len(gamesAsJson),
              'offset' : input_offset,
@@ -159,9 +159,9 @@ def accept_game():
     if (current_player == None):
         response.status = 401
         return { 'error' : 'NOTLOGGEDIN' }
-    
+
     input_game_id = request.forms.get('gameId')
-    
+
     gameQuery = models.session.query(models.Game).filter(models.Game.id == input_game_id)
     if(gameQuery.count() == 0):
         return { 'error' : 'CANTFINDGAME' }
