@@ -35,7 +35,7 @@ class Game(Base):
     loser_score = Column(Integer)
     timestamp = Column(Integer)
     state = Column(String)
-    
+
     submitted_by_id = Column(Integer, ForeignKey('players.id'))
     submitted_by = relationship("Player", foreign_keys=[submitted_by_id])
 
