@@ -13,7 +13,8 @@ def set_logged_in_player():
     global current_player
     authToken = request.get_cookie('authtoken')
 
-    playerQuery = models.session.query(models.Player).filter(models.Player.authToken == authToken)
+    playerQuery = models.session.query(models.Player).\
+                  filter(models.Player.authToken == authToken)
     if (playerQuery.count() != 1):
         current_player = None
     else:
@@ -34,14 +35,18 @@ def get_players():
     input_count = int(request.query.get('count') or 100)
     input_offset = int(request.query.get('offset') or 0)
 
-    playersQuery = models.session.query(models.Player).slice(input_offset, input_offset + input_count)
+    playersQuery = models.session.query(models.Player).\
+                   slice(input_offset, input_offset + input_count)
     playersAsJson = list(map(lambda player: player.to_dictionary(), playersQuery))
 
-    return { 'count' : len(playersAsJson), 'offset' : input_offset, 'players' : playersAsJson }
+    return { 'count' : len(playersAsJson),
+             'offset' : input_offset,
+             'players' : playersAsJson }
 
 @app.get('/players/<username>')
 def get_player_by_username(username):
-    playerQuery = models.session.query(models.Player).filter(models.Player.username == username)
+    playerQuery = models.session.query(models.Player).\
+                  filter(models.Player.username == username)
     if (playerQuery.count() == 0):
         return { 'error' : 'no player found' }
     player = playerQuery.first()
@@ -49,7 +54,8 @@ def get_player_by_username(username):
 
 @app.get('/players/<username>/games')
 def get_games_by_username(username):
-    return template('No games associated with player <b>{{username}}</b>.', username=username)
+    return template('No games associated with player <b>{{username}}</b>.',
+                    username=username)
 
 @app.get('/games/<game_id>')
 def get_game_by_id(game_id):
@@ -64,7 +70,8 @@ def get_games():
     input_count = int(request.query.get('count') or 100)
     input_offset = int(request.query.get('offset') or 0)
 
-    gamesQuery = models.session.query(models.Game).slice(input_offset, input_offset + input_count)
+    gamesQuery = models.session.query(models.Game).\
+                 slice(input_offset, input_offset + input_count)
     gamesAsJson = list(map(lambda game: game.to_dictionary(), gamesQuery))
 
     return { 'count' : len(gamesAsJson), 'offset' : input_offset, 'games' : gamesAsJson }
@@ -90,7 +97,8 @@ def post_games():
     input_winner_score = request.forms.get('winnerScore')
     input_loser_score = request.forms.get('loserScore')
 
-    if( not (current_player.username == input_winner or current_player.username == input_loser)):
+    if( not (current_player.username == input_winner or
+             current_player.username == input_loser)):
         response.status = 400
         return { 'error' : 'INVALIDPLAYERS'}
 
@@ -98,8 +106,10 @@ def post_games():
         response.status = 400
         return { 'error' : 'INVALIDSCORES'}
 
-    winnerQuery = models.session.query(models.Player).filter(models.Player.username == input_winner)
-    loserQuery = models.session.query(models.Player).filter(models.Player.username == input_loser)
+    winnerQuery = models.session.query(models.Player).\
+                  filter(models.Player.username == input_winner)
+    loserQuery = models.session.query(models.Player).\
+                 filter(models.Player.username == input_loser)
 
     if( not (winnerQuery.count() == 1 and loserQuery.count() == 1)):
         response.status = 400
@@ -108,7 +118,10 @@ def post_games():
     winner = winnerQuery.one()
     loser = loserQuery.one()
 
-    game = models.Game(winner=winner, loser=loser, winner_score=input_winner_score, loser_score=input_loser_score, timestamp=int(time.time()))
+    game = models.Game(winner=winner, loser=loser,
+                       winner_score=input_winner_score,
+                       loser_score=input_loser_score,
+                       timestamp=int(time.time()))
     models.session.add(game)
     models.session.commit()
 
@@ -124,12 +137,16 @@ def post_players():
     input_password = request.forms.get('password')
     input_email = request.forms.get('email')
 
-    playerQuery = models.session.query(models.Player).filter(or_(models.Player.username == input_username, models.Player.email == input_email))
+    playerQuery = models.session.query(models.Player).\
+                  filter(or_(models.Player.username == input_username,
+                             models.Player.email == input_email))
     if (playerQuery.count() > 0):
         response.status = 409
         return { 'error' : 'USEREXISTS' }
 
-    player = models.Player(username = input_username, password = input_password, email = input_email)
+    player = models.Player(username = input_username,
+                           password = input_password,
+                           email = input_email)
     models.session.add(player)
     models.session.commit()
 
@@ -140,7 +157,9 @@ def login():
     input_username = request.forms.get('username')
     input_password = request.forms.get('password')
 
-    playerQuery = models.session.query(models.Player).filter(and_(models.Player.username == input_username, models.Player.password == input_password))
+    playerQuery = models.session.query(models.Player).\
+                  filter(and_(models.Player.username == input_username,
+                              models.Player.password == input_password))
     if (not playerQuery.count() == 1):
         response.status = 401
         return { 'error' : 'GETDUNKED'}

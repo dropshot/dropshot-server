@@ -13,7 +13,9 @@ class Player(Base):
     password = Column(String)
     email = Column(String, unique=True)
     authToken = Column(String, unique=True)
-    games = relationship("Game", primaryjoin = "or_(Player.id==Game.loser_id, Player.id==Game.winner_id)")
+    games = relationship("Game",
+                         primaryjoin = "or_(Player.id==Game.loser_id,"+
+                                       " Player.id==Game.winner_id)")
 
     def to_dictionary (self):
         return { 'username' : self.username, 'gamesPlayed' : len(self.games)}
@@ -34,7 +36,11 @@ class Game(Base):
     timestamp = Column(Integer)
 
     def to_dictionary(self):
-        return { 'id' : self.id , 'winner' : self.winner.username, 'loser' : self.loser.username, 'loserScore' : self.loser_score, 'winnerScore' : self.winner_score, 'timestamp' : self.timestamp}
+        return { 'id' : self.id , 'winner' : self.winner.username,
+                 'loser' : self.loser.username,
+                 'loserScore' : self.loser_score,
+                 'winnerScore' : self.winner_score,
+                 'timestamp' : self.timestamp}
 
 Base.metadata.create_all(bind=engine)
 Session = sessionmaker(bind=engine)
