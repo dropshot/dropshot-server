@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from bottle import Bottle, request, template, response, abort
+from bottle import Bottle, request, response, abort
 from sqlalchemy import or_, and_
 import models
 import time
@@ -71,10 +71,32 @@ def get_games():
     input_offset = int(request.query.get('offset') or 0)
 
     gamesQuery = models.session.query(models.Game).\
+                 filter(models.Game.state == 'accepted').\
                  slice(input_offset, input_offset + input_count)
+
     gamesAsJson = list(map(lambda game: game.to_dictionary(), gamesQuery))
 
     return { 'count' : len(gamesAsJson), 'offset' : input_offset, 'games' : gamesAsJson }
+
+@app.get('/pendingGames')
+def get_pending_games():
+    if(current_player == None):
+        response.status = 401
+        return { 'error' : 'NOTLOGGEDIN'}
+    
+    input_count = int(request.query.get('count') or 100)
+    input_offset = int(request.query.get('offset') or 0)
+    
+    gamesQuery = models.session.query(models.Game).\
+                 filter(models.Game.state == 'pending').\
+                 filter(models.Game.submitted_by != current_player).\
+                 filter(or_(models.Game.loser == current_player,
+                            models.Game.winner == current_player))
+    
+    gamesAsJson = list(map(lambda game: game.to_dictionary(), gamesQuery))
+    return { 'count' : len(gamesAsJson),
+             'offset' : input_offset,
+             'games' : gamesAsJson }
 
 @app.get('/logout')
 def logout():
@@ -118,14 +140,40 @@ def post_games():
     winner = winnerQuery.one()
     loser = loserQuery.one()
 
-    game = models.Game(winner=winner, loser=loser,
+    game = models.Game(winner=winner,
+                       loser=loser,
                        winner_score=input_winner_score,
                        loser_score=input_loser_score,
-                       timestamp=int(time.time()))
+                       timestamp=int(time.time()),
+                       state='pending',
+                       submitted_by=current_player)
+
     models.session.add(game)
     models.session.commit()
 
     response.status = 201
+    return game.to_dictionary()
+
+@app.post('/acceptGame')
+def accept_game():
+    if (current_player == None):
+        response.status = 401
+        return { 'error' : 'NOTLOGGEDIN' }
+    
+    input_game_id = request.forms.get('gameId')
+    
+    gameQuery = models.session.query(models.Game).filter(models.Game.id == input_game_id)
+    if(gameQuery.count() == 0):
+        return { 'error' : 'CANTFINDGAME' }
+    gameQuery = gameQuery.filter(models.Game.state == 'pending').\
+                          filter(models.Game.submitted_by != current_player).\
+                          filter(or_(models.Game.loser == current_player,
+                                     models.Game.winner == current_player))
+    if(gameQuery.count() == 0):
+        return { 'error' : 'CANTACCEPT' }
+    game = gameQuery.one()
+    game.state = 'accepted'
+    models.session.commit()
     return game.to_dictionary()
 
 @app.post('/players')
