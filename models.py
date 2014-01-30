@@ -14,10 +14,10 @@ class Player(Base):
     email = Column(String, unique=True)
     authToken = Column(String, unique=True)
     games = relationship("Game", primaryjoin = "or_(Player.id==Game.loser_id, Player.id==Game.winner_id)")
-    
+
     def to_dictionary (self):
         return { 'username' : self.username, 'gamesPlayed' : len(self.games)}
-    
+
     def generate_auth_token (self):
         self.authToken = str(binascii.b2a_hex(os.urandom(15)))
         return True
@@ -32,7 +32,7 @@ class Game(Base):
     winner_score = Column(Integer)
     loser_score = Column(Integer)
     timestamp = Column(Integer)
-    
+
     def to_dictionary(self):
         return { 'id' : self.id , 'winner' : self.winner.username, 'loser' : self.loser.username, 'loserScore' : self.loser_score, 'winnerScore' : self.winner_score, 'timestamp' : self.timestamp}
 
