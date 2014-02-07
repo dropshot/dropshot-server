@@ -221,5 +221,15 @@ def login():
     response.set_cookie('authtoken', player.authToken)
     return { 'authToken' : player.authToken }
 
+# ---- DELETE REQUESTS ----------------------------------------------------------
+
+@app.delete('/players/<username>')
+def delete_players(username):
+    pass
+
+@app.delete('/games/<game_id>')
+def delete_games(game_id):
+    pass
+
 if __name__ == '__main__':
     app.run(host='localhost', port='3000')
