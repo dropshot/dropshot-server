@@ -221,5 +221,24 @@ def login():
     response.set_cookie('authtoken', player.authToken)
     return { 'authToken' : player.authToken }
 
+
+# ---- DELETE REQUESTS ----------------------------------------------------------
+
+@app.delete('/players/<username>')
+def delete_players(username):
+    playerQuery = models.session.query(models.Player).\
+                  filter(models.Player.username == username).delete()
+    if (playerQuery.count() == 0):
+        return { 'error' : 'no player found' }
+    response.status = 204
+
+@app.delete('/games/<game_id>')
+def delete_games(game_id):
+    gameQuery = models.session.query(models.Game).\
+                filter(models.Game.id == gameId).delete()
+    if(gameQuery.count() == 0):
+        return { 'error' : 'CANTFINDGAME' }
+    response.status = 204
+
 if __name__ == '__main__':
     app.run(host='localhost', port='3000')
