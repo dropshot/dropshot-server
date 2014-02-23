@@ -3,6 +3,7 @@ from bottle import Bottle, request, response, abort
 from sqlalchemy import or_, and_
 import models
 import time
+import sslcherrypy
 
 app = Bottle()
 
@@ -241,4 +242,5 @@ def delete_games(game_id):
     response.status = 204
 
 if __name__ == '__main__':
-    app.run(host='localhost', port='3000')
+    app.run(host="localhost", port='3000', cert='/var/tmp/server.pem',
+            key='/var/tmp/server.pem', server='sslcherrypy')
