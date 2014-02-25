@@ -15,7 +15,9 @@ done
 # Save current database
 DBFILE="db.sqlite"
 
-mv $DBFILE $DBFILE.bak
+if [ -e $DBFILE ]; then
+  mv $DBFILE $DBFILE.bak
+fi
 
 ./dropshot.py &
 SERVERPID=$!
@@ -29,6 +31,8 @@ RET=$?
 # Cleanups
 kill $SERVERPID
 rm $DBFILE
-mv $DBFILE.bak $DBFILE
+if [ -e $DBFILE.bak ]; then
+  mv $DBFILE.bak $DBFILE
+fi
 
 exit $RET
