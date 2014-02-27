@@ -12,10 +12,28 @@ while true; do
   esac
 done
 
+#check if something is listening on tcp port 3000
+nstat=`netstat -plnt 2> /dev/null | grep :3000`
+if [ $? -eq 0 ]; then
+  echo "============"
+  echo "something is already listening on tcp port 3000"
+  echo "============"
+  echo NETSTAT
+  echo $nstat
+  echo "============"
+  echo PS
+  pid=`echo $nstat|tr / \ |cut -d\  -f7`
+  ps up $pid
+  echo "============"
+  exit 2;
+fi
+
 # Save current database
 DBFILE="db.sqlite"
 
-mv $DBFILE $DBFILE.bak
+if [ -e $DBFILE ]; then
+  mv $DBFILE $DBFILE.bak
+fi
 
 ./dropshot.py &
 SERVERPID=$!
@@ -29,6 +47,8 @@ RET=$?
 # Cleanups
 kill $SERVERPID
 rm $DBFILE
-mv $DBFILE.bak $DBFILE
+if [ -e $DBFILE.bak ]; then
+  mv $DBFILE.bak $DBFILE
+fi
 
 exit $RET
