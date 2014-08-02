@@ -1,6 +1,6 @@
 #!/usr/bin/env python
-import urllib.parse
-import urllib.request
+
+import requests
 
 def create_player(username, password, email):
     url = 'https://localhost:3000/players'
@@ -8,12 +8,15 @@ def create_player(username, password, email):
               'password' : password,
               'email'    : email }
 
-    data = urllib.parse.urlencode(values)
-    data = data.encode('utf-8') # data should be bytes
-    req = urllib.request.Request(url, data)
-    response = urllib.request.urlopen(req)
-    the_page = response.read()
-    print("Created user \'{}\' with password \'{}\' and email \'{}\'".format(username, password, email))
+    r = requests.post(url, params=values, verify=False)
+
+    r.raise_for_status()
+
+    if (r.status_code == 201):
+        print("Created user \'{}\' with password \'{}\' and email \'{}\'".format(username,
+                                                                                 password,
+                                                                                 email))
+
 
 if __name__ == '__main__':
     create_player("chapmang", "password", "chapmang@dropshot.com")
