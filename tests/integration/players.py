@@ -3,7 +3,7 @@ import urllib.parse
 import urllib.request
 
 def create_player(username, password, email):
-    url = 'http://localhost:3000/players'
+    url = 'https://localhost:3000/players'
     values = {'username' : username,
               'password' : password,
               'email'    : email }
