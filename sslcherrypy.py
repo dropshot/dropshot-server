@@ -1,5 +1,6 @@
 from bottle import server_names, ServerAdapter
 
+
 class SSLCherryPy(ServerAdapter):
     def __init__(self, cert=None, key=None, ** kwargs):
         """Create an SSL capable Bottle ServerAdapter with CherryPy"""
@@ -9,9 +10,9 @@ class SSLCherryPy(ServerAdapter):
 
     def run(self, app):
         """Initialize and start the SSL Capable CherryPy Server"""
-        from cherrypy import wsgiserver 
+        from cherrypy import wsgiserver
         from cherrypy.wsgiserver import CherryPyWSGIServer, ssl_builtin
- 
+
         server = CherryPyWSGIServer((self.host, self.port), app)
         server.ssl_adapter = ssl_builtin.BuiltinSSLAdapter(self.cert, self.key)
         try:
@@ -19,7 +20,5 @@ class SSLCherryPy(ServerAdapter):
         finally:
             server.stop()
 
-#register SSLCherryPy as a wsgi capable server
+# register SSLCherryPy as a wsgi capable server
 server_names['sslcherrypy'] = SSLCherryPy
-
-
