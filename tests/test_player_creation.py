@@ -1,27 +1,14 @@
-#!/usr/bin/env python
+from webtest import TestApp
+import dropshot
 
-import requests
+def test_create_player():
+    app = TestApp(dropshot.app)
+    params = {'username': 'chapmang',
+              'password': 'deadparrot',
+              'email': 'chapmang@dropshot.com'}
 
+    app.post('/players', params)
 
-def create_player(username, password, email):
-    url = 'https://localhost:3000/players'
-    values = {'username': username,
-              'password': password,
-              'email': email}
+    res = app.get('/players')
 
-    r = requests.post(url, params=values, verify=False)
-
-    r.raise_for_status()
-
-    if (r.status_code == 201):
-        print("Created user '{}' with password '{}' and email '{}'".format(
-            username, password, email))
-
-
-if __name__ == '__main__':
-    create_player("chapmang", "password", "chapmang@dropshot.com")
-    create_player("idlee", "deadparrot", "idlee@dropshot.com")
-    create_player("gilliamt", "lumberjack", "gilliamt@dropshot.com")
-    create_player("jonest", "trojanrabbit", "jonest@dropshot.com")
-    create_player("cleesej", "generaldirection", "cleesej@dropshot.com")
-    create_player("palinm", "fleshwound", "palinm@dropshot.com")
+    assert res.status_int == 200
