@@ -1,12 +1,10 @@
 language: python
 python:
-  - "3.3"
   - "3.2"
   - "3.3"
   - "3.4"
 
 install:
-  - "pip install -r requirements.txt"
-  - "pip install -r tests/requirements.txt"
+  - "pip install -r dev-requirements.txt"
 
-script: "./runtest.sh"
+script: "nosetests -v"
