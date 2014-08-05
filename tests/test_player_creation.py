@@ -16,10 +16,10 @@ def test_create_player():
                      'username': 'chapmang'}
                 ]}
 
-    app.post('/players', params)
+    post_response = app.post('/players', params)
+    assert post_response.status_int == 201
 
-    res = app.get('/players')
-
-    assert res.status_int == 200
-    assert res.content_type == 'application/json'
-    assert res.json == expected
+    get_response = app.get('/players')
+    assert get_response.status_int == 200
+    assert get_response.content_type == 'application/json'
+    assert get_response.json == expected
