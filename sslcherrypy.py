@@ -1,4 +1,4 @@
-from bottle import server_names, ServerAdapter
+from bottle import ServerAdapter
 
 
 class SSLCherryPy(ServerAdapter):
@@ -20,5 +20,3 @@ class SSLCherryPy(ServerAdapter):
         finally:
             server.stop()
 
-# register SSLCherryPy as a wsgi capable server
-server_names['sslcherrypy'] = SSLCherryPy
