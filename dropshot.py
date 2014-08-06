@@ -1,9 +1,12 @@
 #!/usr/bin/env python
-from bottle import Bottle, request, response, template
+from bottle import Bottle, request, response, template, server_names
 from sqlalchemy import or_, and_
 import models
 from time import time
-import sslcherrypy
+from sslcherrypy import SSLCherryPy
+
+# Register SSLCherryPy as a wsgi capable server.
+server_names['sslcherrypy'] = SSLCherryPy
 
 app = Bottle()
 
