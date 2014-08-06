@@ -2,7 +2,7 @@
 from bottle import Bottle, request, response, template
 from sqlalchemy import or_, and_
 import models
-import time
+from time import time
 import sslcherrypy
 
 app = Bottle()
