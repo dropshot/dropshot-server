@@ -15,6 +15,7 @@ current_player = None
 
 @app.hook('before_request')
 def set_logged_in_player():
+    """Set which player is logged in before processing the request."""
     global current_player
     authToken = request.get_cookie('authtoken', default="!")
 
@@ -30,16 +31,28 @@ def set_logged_in_player():
 
 @app.get('/')
 def home():
+    """Return a status message if the root of the app is requested."""
     return "dropshot is online"
 
 
 @app.get('/ping')
 def pong():
+    """If ping is requested, naturally we return pong."""
     return "pong"
 
 
 @app.get('/players')
 def get_players():
+    """
+    Get players.
+
+    Args:
+        none
+
+    Returns:
+        A dictionary including player count, a list of players, and an offset
+        for player pagination.
+    """
     input_count = int(request.query.get('count') or 100)
     input_offset = int(request.query.get('offset') or 0)
 
@@ -54,6 +67,15 @@ def get_players():
 
 @app.get('/players/<username>')
 def get_player_by_username(username):
+    """
+    Get a player by their username.
+
+    Args:
+        username: The name of the user to look up.
+
+    Returns:
+        The result of calling the player object's to_dictionary method.
+    """
     playerQuery = models.session.query(models.Player).\
         filter(models.Player.username == username)
     if (playerQuery.count() == 0):
@@ -64,12 +86,30 @@ def get_player_by_username(username):
 
 @app.get('/players/<username>/games')
 def get_games_by_username(username):
+    """
+    Get games associated with a given username.
+
+    Args:
+        username: The name of the user to use for looking up games.
+
+    Returns:
+        HTML saying no games are associated with the given user.
+    """
     return template('No games associated with player <b>{{username}}</b>.',
                     username=username)
 
 
 @app.get('/games/<game_id>')
 def get_game_by_id(game_id):
+    """
+    Get a game by its id.
+
+    Args:
+        game_id: The id of the game to return.
+
+    Returns:
+        The result of calling the game object's to_dictionary method.
+    """
     gameQuery = models.session.query(models.Game).\
         filter(models.Game.id == game_id)
     if(gameQuery.count() == 0):
@@ -80,6 +120,16 @@ def get_game_by_id(game_id):
 
 @app.get('/games')
 def get_games():
+    """
+    Get games.
+
+    Args:
+        none
+
+    Returns:
+        A dictionary including game count, a list of games, and an offset
+        for for game pagination.
+    """
     input_count = int(request.query.get('count') or 100)
     input_offset = int(request.query.get('offset') or 0)
 
@@ -95,6 +145,16 @@ def get_games():
 
 @app.get('/pendingGames')
 def get_pending_games():
+    """
+    Get pending games.
+
+    Args:
+        none
+
+    Returns:
+        A dictionary including pending games count, a list of pending games,
+        and an offset for for pending game pagination.
+    """
     if(current_player is None):
         response.status = 401
         return {'error': 'NOTLOGGEDIN'}
@@ -115,6 +175,15 @@ def get_pending_games():
 
 @app.get('/logout')
 def logout():
+    """
+    Log the current player out.
+
+    Args:
+        none
+
+    Returns:
+        A string saying goodbye.
+    """
     if(current_player is None):
         response.status = 401
         return {'error': 'NOTLOGGEDIN'}
@@ -126,6 +195,16 @@ def logout():
 
 @app.post('/games')
 def post_games():
+    """
+    Create a new game.
+
+    Args:
+        none
+
+    Returns:
+        The result of calling the newly created game object's to_dictionary
+        method.
+    """
     if (current_player is None):
         response.status = 401
         return {'error': 'NOTLOGGEDIN'}
@@ -173,6 +252,15 @@ def post_games():
 
 @app.post('/acceptGame')
 def accept_game():
+    """
+    Accept a pending game.
+
+    Args:
+        none
+
+    Returns:
+        The result of calling the game object's to_dictionary method.
+    """
     if (current_player is None):
         response.status = 401
         return {'error': 'NOTLOGGEDIN'}
@@ -197,6 +285,17 @@ def accept_game():
 
 @app.post('/players')
 def post_players():
+    """
+    Create a new player.
+
+    Args:
+        none
+
+    Returns:
+        If a player is logged in, a dictionary with a logout error. If the
+        requested player already exists, then a dictonary with an error saying
+        so. Otherwise, there is no return.
+    """
     if (current_player is not None):
         response.status = 403
         return {'error': 'MUSTLOGOUT'}
@@ -221,6 +320,16 @@ def post_players():
 
 @app.post('/login')
 def login():
+    """
+    Login.
+
+    Args:
+        none
+
+    Returns:
+        A dictionary containing an auth token for the player or, if the login
+        was unsuccessful then dictionary with a GETDUNKED error.
+    """
     input_username = request.forms.get('username')
     input_password = request.forms.get('password')
 
@@ -245,6 +354,16 @@ def login():
 
 @app.delete('/players/<username>')
 def delete_players(username):
+    """
+    Delete a player.
+
+    Args:
+        username: The name of the user to be deleted.
+
+    Returns:
+        If the player is not found a dictionary containing an error, otherwise
+        there is no return.
+    """
     playerQuery = models.session.query(models.Player).\
         filter(models.Player.username == username).delete()
     if (playerQuery.count() == 0):
@@ -254,6 +373,16 @@ def delete_players(username):
 
 @app.delete('/games/<game_id>')
 def delete_games(game_id):
+    """
+    Delete a game.
+
+    Args:
+        game_id: The id of the game to be deleted.
+
+    Returns:
+        If the game is not found a dictionary saying there was an error,
+        otherwise there is no return.
+    """
     gameQuery = models.session.query(models.Game).\
         filter(models.Game.id == game_id).delete()
     if(gameQuery.count() == 0):
