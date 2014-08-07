@@ -2,6 +2,16 @@ from bottle import ServerAdapter
 
 
 class SSLCherryPy(ServerAdapter):
+    """
+    SSLCherryPy
+
+    Extends the base class ServerAdapter with CherryPy as a WSGI capable server
+    for SSL support in Bottle.
+
+    Attributes:
+        cert: The SSL certificate.
+        key: The key corresponding to the SSL certificate.
+    """
     def __init__(self, cert=None, key=None, ** kwargs):
         """Create an SSL capable Bottle ServerAdapter with CherryPy"""
         super(SSLCherryPy, self).__init__(** kwargs)
