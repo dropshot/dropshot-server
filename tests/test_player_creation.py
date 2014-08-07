@@ -3,6 +3,15 @@ import dropshot
 
 
 def test_create_player():
+    """
+    Test the creation of a player.
+
+    Args:
+        none
+
+    Returns:
+        none
+    """
     app = TestApp(dropshot.app)
 
     params = {'username': 'chapmang',
