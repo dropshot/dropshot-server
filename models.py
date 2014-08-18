@@ -1,10 +1,9 @@
-from sqlalchemy import create_engine, Column, Integer, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 import os
 import binascii
 
-engine = create_engine('sqlite:///db.sqlite', echo=True)
 Base = declarative_base()
 
 
@@ -111,7 +110,3 @@ class Game(Base):
                 'winnerScore': self.winner_score,
                 'timestamp': self.timestamp,
                 'state': self.state}
-
-Base.metadata.create_all(bind=engine)
-Session = sessionmaker(bind=engine)
-session = Session()

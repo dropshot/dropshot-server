@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from bottle import Bottle, request, response, template, server_names
-from sqlalchemy import or_, and_
+from bottle.ext import sqlalchemy
+from sqlalchemy import or_, and_, create_engine
 import models
 from time import time
 from sslcherrypy import SSLCherryPy
@@ -11,20 +12,6 @@ server_names['sslcherrypy'] = SSLCherryPy
 app = Bottle()
 
 current_player = None
-
-
-@app.hook('before_request')
-def set_logged_in_player():
-    """Set which player is logged in before processing the request."""
-    global current_player
-    authToken = request.get_cookie('authtoken', default="!")
-
-    playerQuery = models.session.query(models.Player).\
-        filter(models.Player.authToken == authToken)
-    if (playerQuery.count() != 1):
-        current_player = None
-    else:
-        current_player = playerQuery.one()
 
 # ---- GET REQUESTS -----------------------------------------------------------
 
@@ -42,12 +29,12 @@ def pong():
 
 
 @app.get('/players')
-def get_players():
+def get_players(db):
     """
     Get players.
 
     Args:
-        none
+        db: An injected SQLAlchemy session.
 
     Returns:
         A dictionary including player count, a list of players, and an offset
@@ -56,7 +43,7 @@ def get_players():
     input_count = int(request.query.get('count') or 100)
     input_offset = int(request.query.get('offset') or 0)
 
-    playersQuery = models.session.query(models.Player).\
+    playersQuery = db.query(models.Player).\
         slice(input_offset, input_offset + input_count)
     playersAsJson = list(map(lambda player: player.to_dictionary(),
                              playersQuery))
@@ -66,17 +53,18 @@ def get_players():
 
 
 @app.get('/players/<username>')
-def get_player_by_username(username):
+def get_player_by_username(username, db):
     """
     Get a player by their username.
 
     Args:
         username: The name of the user to look up.
+        db: An injected SQLAlchemy session.
 
     Returns:
         The result of calling the player object's to_dictionary method.
     """
-    playerQuery = models.session.query(models.Player).\
+    playerQuery = db.query(models.Player).\
         filter(models.Player.username == username)
     if (playerQuery.count() == 0):
         return {'error': 'no player found'}
@@ -100,17 +88,18 @@ def get_games_by_username(username):
 
 
 @app.get('/games/<game_id>')
-def get_game_by_id(game_id):
+def get_game_by_id(game_id, db):
     """
     Get a game by its id.
 
     Args:
         game_id: The id of the game to return.
+        db: An injected SQLAlchemy session.
 
     Returns:
         The result of calling the game object's to_dictionary method.
     """
-    gameQuery = models.session.query(models.Game).\
+    gameQuery = db.query(models.Game).\
         filter(models.Game.id == game_id)
     if(gameQuery.count() == 0):
         return {'error': 'CANTFINDGAME'}
@@ -119,12 +108,12 @@ def get_game_by_id(game_id):
 
 
 @app.get('/games')
-def get_games():
+def get_games(db):
     """
     Get games.
 
     Args:
-        none
+        db: An injected SQLAlchemy session.
 
     Returns:
         A dictionary including game count, a list of games, and an offset
@@ -133,7 +122,7 @@ def get_games():
     input_count = int(request.query.get('count') or 100)
     input_offset = int(request.query.get('offset') or 0)
 
-    gamesQuery = models.session.query(models.Game).\
+    gamesQuery = db.query(models.Game).\
         filter(models.Game.state == 'accepted').\
         slice(input_offset, input_offset + input_count)
 
@@ -144,12 +133,12 @@ def get_games():
 
 
 @app.get('/pendingGames')
-def get_pending_games():
+def get_pending_games(db):
     """
     Get pending games.
 
     Args:
-        none
+        db: An injected SQLAlchemy session.
 
     Returns:
         A dictionary including pending games count, a list of pending games,
@@ -162,7 +151,7 @@ def get_pending_games():
     input_count = int(request.query.get('count') or 100)
     input_offset = int(request.query.get('offset') or 0)
 
-    gamesQuery = models.session.query(models.Game).\
+    gamesQuery = db.query(models.Game).\
         filter(models.Game.state == 'pending').\
         filter(models.Game.submitted_by != current_player).\
         filter(or_(models.Game.loser == current_player,
@@ -194,12 +183,12 @@ def logout():
 
 
 @app.post('/games')
-def post_games():
+def post_games(db):
     """
     Create a new game.
 
     Args:
-        none
+        db: An injected SQLAlchemy session.
 
     Returns:
         The result of calling the newly created game object's to_dictionary
@@ -223,9 +212,9 @@ def post_games():
         response.status = 400
         return {'error': 'INVALIDSCORES'}
 
-    winnerQuery = models.session.query(models.Player).\
+    winnerQuery = db.query(models.Player).\
         filter(models.Player.username == input_winner)
-    loserQuery = models.session.query(models.Player).\
+    loserQuery = db.query(models.Player).\
         filter(models.Player.username == input_loser)
 
     if (not (winnerQuery.count() == 1 and loserQuery.count() == 1)):
@@ -243,20 +232,19 @@ def post_games():
                        state='pending',
                        submitted_by=current_player)
 
-    models.session.add(game)
-    models.session.commit()
+    db.add(game)
 
     response.status = 201
     return game.to_dictionary()
 
 
 @app.post('/acceptGame')
-def accept_game():
+def accept_game(db):
     """
     Accept a pending game.
 
     Args:
-        none
+        db: An injected SQLAlchemy session.
 
     Returns:
         The result of calling the game object's to_dictionary method.
@@ -267,7 +255,7 @@ def accept_game():
 
     input_game_id = request.forms.get('gameId')
 
-    gameQuery = models.session.query(models.Game).\
+    gameQuery = db.query(models.Game).\
         filter(models.Game.id == input_game_id)
     if(gameQuery.count() == 0):
         return {'error': 'CANTFINDGAME'}
@@ -279,17 +267,16 @@ def accept_game():
         return {'error': 'CANTACCEPT'}
     game = gameQuery.one()
     game.state = 'accepted'
-    models.session.commit()
     return game.to_dictionary()
 
 
 @app.post('/players')
-def post_players():
+def post_players(db):
     """
     Create a new player.
 
     Args:
-        none
+        db: An injected SQLAlchemy session.
 
     Returns:
         If a player is logged in, a dictionary with a logout error. If the
@@ -303,7 +290,7 @@ def post_players():
     input_password = request.forms.get('password')
     input_email = request.forms.get('email')
 
-    playerQuery = models.session.query(models.Player).\
+    playerQuery = db.query(models.Player).\
         filter(or_(models.Player.username == input_username,
                    models.Player.email == input_email))
     if (playerQuery.count() > 0):
@@ -312,19 +299,18 @@ def post_players():
 
     player = models.Player(username=input_username, password=input_password,
                            email=input_email)
-    models.session.add(player)
-    models.session.commit()
+    db.add(player)
 
     response.status = 201
 
 
 @app.post('/login')
-def login():
+def login(db):
     """
     Login.
 
     Args:
-        none
+        db: An injected SQLAlchemy session.
 
     Returns:
         A dictionary containing an auth token for the player or, if the login
@@ -333,7 +319,7 @@ def login():
     input_username = request.forms.get('username')
     input_password = request.forms.get('password')
 
-    playerQuery = models.session.query(models.Player).\
+    playerQuery = db.query(models.Player).\
         filter(and_(models.Player.username == input_username,
                     models.Player.password == input_password))
     if (not playerQuery.count() == 1):
@@ -344,7 +330,6 @@ def login():
 
     if (player.authToken is None):
         player.generate_auth_token()
-        models.session.commit()
 
     response.set_cookie('authtoken', player.authToken)
     return {'authToken': player.authToken}
@@ -353,18 +338,19 @@ def login():
 # ---- DELETE REQUESTS ---------------------------------------------------------
 
 @app.delete('/players/<username>')
-def delete_players(username):
+def delete_players(username, db):
     """
     Delete a player.
 
     Args:
         username: The name of the user to be deleted.
+        db: An injected SQLAlchemy session.
 
     Returns:
         If the player is not found a dictionary containing an error, otherwise
         there is no return.
     """
-    playerQuery = models.session.query(models.Player).\
+    playerQuery = db.query(models.Player).\
         filter(models.Player.username == username).delete()
     if (playerQuery.count() == 0):
         return {'error': 'no player found'}
@@ -372,23 +358,39 @@ def delete_players(username):
 
 
 @app.delete('/games/<game_id>')
-def delete_games(game_id):
+def delete_games(game_id, db):
     """
     Delete a game.
 
     Args:
         game_id: The id of the game to be deleted.
+        db: An injected SQLAlchemy session.
 
     Returns:
         If the game is not found a dictionary saying there was an error,
         otherwise there is no return.
     """
-    gameQuery = models.session.query(models.Game).\
+    gameQuery = db.query(models.Game).\
         filter(models.Game.id == game_id).delete()
     if(gameQuery.count() == 0):
         return {'error': 'CANTFINDGAME'}
     response.status = 204
 
+
+def configure_app():
+    engine = create_engine('sqlite:///db.sqlite', echo=True)
+    plugin = sqlalchemy.Plugin(
+        engine,
+        models.Base.metadata,
+        keyword='db',
+        create=True,
+        commit=True,
+        use_kwargs=False
+    )
+    app.install(plugin)
+
+
 if __name__ == '__main__':
+    configure_app()
     app.run(host="localhost", port='3000', cert='/var/tmp/server.pem',
             key='/var/tmp/server.pem', server='sslcherrypy')
